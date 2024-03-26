@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+</head>
+<body>
+    <div class="container itemDetails">
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <div class="product-image mt-4">
+              <img id="productImage" src="" alt="Product Image" />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="product-details mt-4">
+              <h1 id="productName"></h1>
+              <p id="productPrice"></p>
+              <p id="productRating"></p>
+              <!-- product Description -->
+            </div>
+          </div>
+          <div class="btn1">
+            
+          </div>
+        </div>
+        </div>
+        <!-- Include any JavaScript files needed for functionality -->
+<script>
+  const addToCart = async (id) => {
+    try {
+      const addCartValue = await fetch(
+        `http://localhost:8080/data/addToCart/${id}`,
+        {
+          method: "PUT",
+          ContentType: "application/json",
+        }
+      );
+      if (addCartValue.ok) {
+        const addCartButton = document.getElementById(`btn_${id}`);
+        addCartButton.classList.add("btn-danger");
+        addCartButton.innerHTML = "Remove from cart";
+        addCartButton.onclick = () => removeFromCart(id);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const removeFromCart = async (id) => {
+    try {
+      const removeCartValue = await fetch(
+        `http://localhost:8080/data/removeFromCart/${id}`,
+        {
+          method: "PUT",
+          ContentType: "application/json",
+        }
+      );
+      if (removeCartValue.ok) {
+        const removeCartButton = document.getElementById(`btn_${id}`);
+        removeCartButton.classList.remove("btn-danger");
+        removeCartButton.classList.add("btn-primary");
+
+        removeCartButton.innerHTML = "Add to cart";
+        removeCartButton.onclick = () => addToCart(id);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const updateProductDetails = async () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const productId = urlParams.get("id");
+      console.log(productId)
+
+      const response = await fetch(
+        `http://localhost:8080/data/product/${productId}`
+      );
+      console.log(response)
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+        console.log(data.cart);
+
+        document.getElementById("productName").innerText = data.product_name;
+        document.getElementById("productImage").src = data.in;
+        // Product Desc get element by id after entering values into db
+        document.getElementById(
+          "productPrice"
+        ).innerText = `Price: $${data.price}`;
+        document.getElementById(
+          "productRating"
+        ).innerText = `Rating ${data.rating}`;
+
+        const btn1 = document.getElementsByClassName("btn1");
+        console.log("btn1 passed")
+        btn1.innerHTML = `
+    <div class="col-md-6 h-100 mt-2 product-btn">
+      ${
+        data.cart
+          ? `<button
+              id="btn_${data.id}"
+              onClick="removeFromCart(${data.id})"
+              class="btn btn-danger"
+            >
+              Remove from cart
+            </button>`
+          : `<button
+              id="btn${data.id}"
+              onClick="addToCart(${data.id})"
+              class="btn btn-primary"
+            >
+              Add to cart
+            </button>`
+      }
+    </div>`;
+      } else {
+        console.error("Failed to fetch product details");
+      }
+    } catch (error) {
+      console.error("Failed to update product details", error);
+    }
+  };
+
+  updateProductDetails();
+    </script>
+</body>
+</html>

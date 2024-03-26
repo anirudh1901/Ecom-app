@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Details</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .product-image img{
+        aspect-ratio: 2/2;
+        object-fit: contain;
+        width: 100%;
+      }
+
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href="#">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="./prod.html">Products</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="./cart.html">Cart</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container itemDetails">
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <div class="product-image mt-4">
+            <img
+              id="productImage"
+              class="rounded-3 shadow"
+              src=""
+              alt="Product Image"
+            />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="product-details mt-4">
+            <h1 id="productName"></h1>
+            <p id="productPrice"></p>
+            <p id="productRating"></p>
+
+            <p id="productDesc" class="lh-base" style="text-align: justify"></p>
+
+            <div class="btn3">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const addToCart = async (id) => {
+        try {
+
+          const addCartValue = await fetch(
+            `http://localhost:8080/data/cart/${id}`,
+            {
+              method: "PUT",
+              ContentType: "application/json",
+            }
+          );
+          
+          if (addCartValue) {
+            const addCartButton = document.getElementById(`btn_${id}`);
+            addCartButton.classList.add("btn-danger");
+            addCartButton.innerHTML = "Remove from cart";
+            addCartButton.onclick = () => removeFromCart(id);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+
+      const removeFromCart = async (id) => {
+console.log(id)
+        try {
+          const removeCartValue = await fetch(
+            `http://localhost:8080/data/removecart/${id}`,
+            {
+              method: "PUT",
+              ContentType: "application/json",
+            }
+          );
+          
+          if (removeCartValue.ok) {
+            console.log('executed')
+            const removeCartButton = document.getElementById(`btn_${id}`);
+            removeCartButton.classList.remove("btn-danger");
+            removeCartButton.classList.add("btn-primary");
+
+            removeCartButton.innerHTML = "Add to cart";
+            removeCartButton.onclick = () => addToCart(id);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      const updateProductDetails = async () => {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const productId = urlParams.get("id");
+
+          const response = await fetch(
+            `http://localhost:8080/data/product/${productId}`
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            
+
+            document.getElementById("productName").innerText =data.product_name;
+            document.getElementById("productDesc").innerText =
+              data.product_desc;
+            document.getElementById("productImage").src = data.image_link;
+            document.getElementById(
+              "productPrice"
+            ).innerText = `Price: Rs ${data.price}`;
+            document.getElementById(
+              "productRating"
+            ).innerText = `Rating ${data.rating}`;
+
+            const btn1 = document.getElementsByClassName("btn3")[0];
+            btn1.innerHTML = `
+        <div class="col-md-6 h-100 mt-2">
+          ${
+            data.cart
+              ? `<button
+            id="btn_${data.id}"
+            onClick="removeFromCart(${data.product_ID})"
+            class="btn btn-danger"
+          >
+            Remove from cart
+          </button>`
+              : `<button
+            id="btn_${data.id}" 
+            onClick="addToCart(${data.product_ID})"
+            class="btn btn-primary"
+          >
+            Add to cart
+          </button>`
+          }
+        </div>`;
+
+          } else {
+            console.error("Failed to fetch product details");
+          }
+        } catch (error) {
+          console.error("Failed to update product details", error);
+        }
+      };
+
+      updateProductDetails();
+    </script>
+  </body>
+</html>
